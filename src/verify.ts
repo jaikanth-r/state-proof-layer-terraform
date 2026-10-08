@@ -19,6 +19,7 @@ import {
 import {
   findEventInMerkleBatch,
   loadLatestMerkleBatch,
+  loadMerkleBatch,
   validateMerkleBatch
 } from "./merkle-batch.js";
 
@@ -77,7 +78,9 @@ export async function run(): Promise<void> {
 
   try {
     const batch =
-      loadLatestMerkleBatch();
+      protection.batchId
+        ? loadMerkleBatch(protection.batchId)
+        : loadLatestMerkleBatch();
 
     if (!batch) {
       throw new Error(

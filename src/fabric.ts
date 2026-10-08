@@ -17,6 +17,7 @@ import type { Contract } from "@hyperledger/fabric-gateway";
 import { config } from "./config.js";
 import {
   loadLatestMerkleBatch,
+  loadMerkleBatch,
   validateMerkleBatch,
   type MerkleBatch
 } from "./merkle-batch.js";
@@ -28,64 +29,41 @@ import {
   saveProtection
 } from "./state.js";
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(
+      `Missing required Fabric configuration: ${name}`
+    );
+  }
+
+  return value;
+}
+
 const fabricTestNetwork =
-  process.env.SPL_FABRIC_TEST_NETWORK ??
-  join(homedir(), "fabric-samples", "test-network");
+  requireEnv("SPL_FABRIC_TEST_NETWORK");
 
 const fabricChannel =
-  process.env.SPL_FABRIC_CHANNEL ??
-  "splchannel";
+  requireEnv("SPL_FABRIC_CHANNEL");
 
 const fabricChaincode =
-  process.env.SPL_FABRIC_CHAINCODE ??
-  "spl-anchor";
+  requireEnv("SPL_FABRIC_CHAINCODE");
 
 const fabricMspId =
-  process.env.SPL_FABRIC_MSP_ID ??
-  "Org1MSP";
+  requireEnv("SPL_FABRIC_MSP_ID");
 
 const fabricPeerEndpoint =
-  process.env.SPL_FABRIC_PEER_ENDPOINT ??
-  "localhost:7051";
+  requireEnv("SPL_FABRIC_PEER_ENDPOINT");
 
 const fabricPeerServerName =
-  process.env.SPL_FABRIC_PEER_SERVER_NAME ??
-  "peer0.org1.example.com";
+  requireEnv("SPL_FABRIC_PEER_SERVER_NAME");
 
-const orgRoot = join(
-  fabricTestNetwork,
-  "organizations",
-  "peerOrganizations",
-  "org1.example.com"
-);
-
-const adminMspRoot = join(
-  orgRoot,
-  "users",
-  "Admin@org1.example.com",
-  "msp"
-);
-
-const certificatePath = join(
-  adminMspRoot,
-  "signcerts",
-  "Admin@org1.example.com-cert.pem"
-);
-
-const privateKeyDirectory = join(
-  adminMspRoot,
-  "keystore"
-);
-
-const tlsRootCertificatePath = join(
-  orgRoot,
-  "peers",
-  "peer0.org1.example.com",
-  "tls",
-  "ca.crt"
-);
+const fabricOrgRoot =
+  requireEnv("SPL_FABRIC_ORG_ROOT");
 
 const decoder = new TextDecoder();
+
 
 export interface FabricAnchorReceipt {
   anchorId: string;
@@ -120,6 +98,15 @@ function anchorsDirectory(): string {
 }
 
 async function findPrivateKey(): Promise<string> {
+  const privateKeyDirectory =
+    join(
+      fabricOrgRoot!,
+      "users",
+      "Admin@org1.example.com",
+      "msp",
+      "keystore"
+    );
+
   const files =
     await readdir(privateKeyDirectory);
 
@@ -146,6 +133,36 @@ async function createGateway(): Promise<{
   gateway: ReturnType<typeof connect>;
   client: grpc.Client;
 }> {
+  const orgRoot =
+    fabricOrgRoot!;
+
+  const adminMspRoot = join(
+    orgRoot,
+    "users",
+    "Admin@org1.example.com",
+    "msp"
+  );
+
+  const certificatePath = join(
+    adminMspRoot,
+    "signcerts",
+    "Admin@org1.example.com-cert.pem"
+  );
+
+  const privateKeyDirectory = join(
+    adminMspRoot,
+    "keystore"
+  );
+
+  const tlsRootCertificatePath = join(
+    orgRoot,
+    "peers",
+    "peer0.org1.example.com",
+    "tls",
+    "ca.crt"
+  );
+
+
   const credentials =
     await readFile(certificatePath);
 
@@ -358,8 +375,28 @@ async function protectBatch(
 }
 
 export async function anchorLatestBatch(): Promise<void> {
+  const protection =
+    getProtection();
+
+  if (!protection) {
+    throw new Error(
+      "No Terraform protection exists. Run spl terraform protect first."
+    );
+  }
+
+  /*
+   * Lifecycle binding:
+   *
+   * Once protection.batchId exists, that exact batch is
+   * authoritative. Never silently switch to a newer batch.
+   *
+   * Before the first anchor, batchId is null, so the latest
+   * batch may be selected as the candidate batch.
+   */
   const batch =
-    loadLatestMerkleBatch();
+    protection.batchId
+      ? loadMerkleBatch(protection.batchId)
+      : loadLatestMerkleBatch();
 
   if (!batch) {
     throw new Error(
@@ -373,15 +410,6 @@ export async function anchorLatestBatch(): Promise<void> {
    * local Merkle batch passes cryptographic validation.
    */
   validateMerkleBatch(batch);
-
-  const protection =
-    getProtection();
-
-  if (!protection) {
-    throw new Error(
-      "No Terraform protection exists. Run spl terraform protect first."
-    );
-  }
 
   const protectedEvent =
     findEventInMerkleBatch(

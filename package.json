@@ -1,8 +1,7 @@
 {
-  "name": "@spl/terraform",
+  "name": "@stateprooflayer/terraform",
   "version": "0.1.0",
-  "private": true,
-  "description": "Terraform state integrity integration for SPL",
+  "description": "Terraform state integrity protection and verification for StateProofLayer",
   "type": "module",
   "exports": {
     "./init": "./dist/init.js",

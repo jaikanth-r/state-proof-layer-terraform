@@ -3,8 +3,6 @@ import { resolve } from "node:path";
 export interface TerraformConfig {
   workspace: string;
   terraformRoot: string;
-  splBaseUrl: string;
-  splToken: string;
   splDirectory: string;
   resourceFile: string;
   protectionFile: string;
@@ -29,14 +27,6 @@ export const config: TerraformConfig = {
   workspace,
 
   terraformRoot,
-
-  splBaseUrl:
-    process.env.SPL_BASE_URL ??
-    "https://127.0.0.1:3000",
-
-  splToken:
-    process.env.SPL_TOKEN ??
-    "dev-token",
 
   splDirectory,
 
