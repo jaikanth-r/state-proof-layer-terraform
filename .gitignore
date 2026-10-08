@@ -1,8 +1,12 @@
+# Dependencies
 node_modules/
-dist/
-*.log
 
-# Terraform
+# Build output
+dist/
+build/
+coverage/
+
+# Terraform runtime
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -10,10 +14,35 @@ crash.log
 crash.*.log
 .terraform.tfstate.lock.info
 
-# SPL local runtime data
+# SPL local runtime
 .spl/
 
-# Environment / secrets
+# Environment files
 .env
 .env.*
 !.env.example
+
+# Credentials and private material
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.backup
+*.orig
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Local Fabric runtime
+fabric-runtime/
+fabric-network/
