@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraform.tfstate.lock.info
+
+# SPL local runtime data
+.spl/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example

@@ -1,0 +1,36 @@
+{
+  "name": "@spl/terraform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Terraform state integrity integration for SPL",
+  "type": "module",
+  "exports": {
+    "./init": "./dist/init.js",
+    "./protect": "./dist/protect.js",
+    "./verify": "./dist/verify.js",
+    "./status": "./dist/status.js",
+    "./history": "./dist/history.js",
+    "./run": "./dist/run.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "init": "tsx src/bin/init.ts",
+    "verify": "tsx src/bin/verify.ts",
+    "status": "tsx src/bin/status.ts",
+    "history": "tsx src/bin/history.ts",
+    "protect": "tsx src/bin/protect.ts"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.6",
+    "@hyperledger/fabric-gateway": "^1.11.0",
+    "tsx": "^4.20.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  },
+  "bin": {
+    "spl": "./dist/cli.js"
+  }
+}
