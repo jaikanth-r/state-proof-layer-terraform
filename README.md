@@ -469,14 +469,12 @@ Cryptographic Integrity
         │
         ├── SHA-256
         ├── Merkle Verification
-        └── Hyperledger Fabric
-                 
+        └── Hyperledger Fabric 
 Application Layer
         │
         ├── API
         ├── PostgreSQL
         └── Authentication / Authorization
-                 
 Presentation Layer
         │
         ├── CLI
